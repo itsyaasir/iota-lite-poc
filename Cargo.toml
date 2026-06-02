@@ -1,0 +1,26 @@
+[package]
+name = "iota-lite-poc"
+version = "0.1.0"
+authors = ["IOTA Foundation <info@iota.org>"]
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+description = "POC for building light-client transaction proofs from gRPC"
+readme = "README.md"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0.71"
+iota-grpc-client = { git = "https://github.com/iotaledger/iota-rust-sdk.git", package = "iota-sdk-grpc-client", rev = "058f623870be7c8fb47d3d52564107eabc2c2f96" }
+iota-grpc-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", package = "iota-sdk-grpc-types", rev = "058f623870be7c8fb47d3d52564107eabc2c2f96" }
+iota-light-client = { git = "https://github.com/iotaledger/iota.git", branch = "develop" }
+iota-sdk-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "058f623870be7c8fb47d3d52564107eabc2c2f96", default-features = false, features = ["serde"] }
+iota-types = { git = "https://github.com/iotaledger/iota.git", branch = "develop" }
+
+[dev-dependencies]
+iota-macros = { git = "https://github.com/iotaledger/iota.git", branch = "develop" }
+iota-test-transaction-builder = { git = "https://github.com/iotaledger/iota.git", branch = "develop" }
+test-cluster = { git = "https://github.com/iotaledger/iota.git", branch = "develop" }
+tokio = { version = "1.52.2", features = ["macros", "rt"] }
