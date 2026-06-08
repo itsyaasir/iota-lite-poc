@@ -4,11 +4,10 @@
 use std::{env, str::FromStr};
 
 use iota_grpc_client::{
-    Client, ReadMask,
     read_mask_fields::{CheckpointResponseField, CheckpointTransactionField},
+    Client, ReadMask,
 };
-use iota_light_client::proof::verify_proof;
-use iota_lite_poc::LiteRpcClient;
+use iota_lite_poc::{verify_proof, LiteRpcClient};
 use iota_macros::sim_test;
 use iota_sdk_types::Digest;
 use iota_test_transaction_builder::make_transfer_iota_transaction;

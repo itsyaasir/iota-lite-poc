@@ -8,12 +8,11 @@
 //! they provide a trusted committee anchor and authenticate every epoch
 //! transition from there.
 
-use anyhow::{Context, anyhow, bail};
+use anyhow::{anyhow, bail, Context};
 use iota_grpc_client::{
-    Client as GrpcClient, ReadMask,
     read_mask_fields::{CheckpointResponseField, EpochField, ServiceInfoField, TransactionField},
+    Client as GrpcClient, ReadMask,
 };
-use iota_light_client::proof::{Proof, ProofTargets, TransactionProof};
 use iota_sdk_types::{Digest, SignedTransaction};
 use iota_types::{
     committee::{Committee, EpochId},
@@ -22,6 +21,10 @@ use iota_types::{
     transaction::Transaction,
 };
 
+mod proof;
+
+pub use proof::{verify_proof, Proof, ProofTargets, TransactionProof};
+
 type CheckpointResponse = iota_grpc_client::CheckpointResponse;
 type ExecutedTransaction = iota_grpc_types::v1::transaction::ExecutedTransaction;
 
@@ -29,7 +32,7 @@ type ExecutedTransaction = iota_grpc_types::v1::transaction::ExecutedTransaction
 ///
 /// `LiteRpcClient` does not run a local checkpoint/archive store. It fetches
 /// the witness data needed for a specific proof from a gRPC node, then packages
-/// that data into the existing `iota-light-client` proof format.
+/// that data into this crate's local proof format.
 #[derive(Clone)]
 pub struct LiteRpcClient {
     grpc_client: GrpcClient,
