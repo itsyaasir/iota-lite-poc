@@ -16,6 +16,7 @@ anyhow = "1.0.71"
 clap = { version = "4.6.1", features = ["derive", "env"] }
 iota-grpc-client = { git = "https://github.com/iotaledger/iota-rust-sdk.git", package = "iota-sdk-grpc-client", rev = "058f623870be7c8fb47d3d52564107eabc2c2f96" }
 iota-grpc-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", package = "iota-sdk-grpc-types", rev = "058f623870be7c8fb47d3d52564107eabc2c2f96" }
+iota-config = { git = "https://github.com/iotaledger/iota.git", branch = "develop" }
 iota-sdk-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "058f623870be7c8fb47d3d52564107eabc2c2f96", default-features = false, features = ["serde"] }
 iota-types = { git = "https://github.com/iotaledger/iota.git", branch = "develop" }
 serde = { version = "1.0", features = ["derive"] }

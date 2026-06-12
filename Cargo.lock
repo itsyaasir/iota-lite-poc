@@ -3977,6 +3977,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "iota-config",
  "iota-macros",
  "iota-sdk-grpc-client",
  "iota-sdk-grpc-types",

@@ -71,7 +71,8 @@ both the proof data and the committee used to verify that proof.
 ### Committee Walk From An Anchor
 
 `committee_from_trusted_anchor(trusted_committee, target_epoch)` starts from a
-committee the caller already trusts, then walks epoch by epoch:
+committee the caller already trusts, then walks epoch by epoch. The CLI derives
+that starting committee from a genesis blob:
 
 ```text
 trusted committee for epoch N
@@ -85,12 +86,7 @@ repeat until target epoch
 This is the independent light-client model. The fullnode still serves the data,
 but each transition is authenticated by the previously trusted committee.
 
-The starting anchor can come from:
-
-- a localnet genesis committee
-- an official genesis blob
-- a pinned trusted committee
-- another trusted checkpoint/committee bundle
+For the command-line flow, the starting anchor is the network genesis blob.
 
 ## Why Both Modes Exist
 
@@ -142,11 +138,11 @@ cargo run --bin iota-lite-poc -- fetch-committee \
   --output epoch-0-committee.json
 ```
 
-Walk committee lineage from a trusted committee anchor:
+Walk committee lineage from a trusted genesis blob:
 
 ```sh
 cargo run --bin iota-lite-poc -- walk-committee \
-  --trusted-committee epoch-0-committee.json \
+  --genesis-blob genesis.blob \
   --target-epoch 1 \
   --output epoch-1-committee.json
 ```

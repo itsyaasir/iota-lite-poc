@@ -10,10 +10,11 @@ use std::{
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
+use iota_config::genesis::Genesis;
 use iota_grpc_client::Client as GrpcClient;
 use iota_lite_poc::{verify_proof, LiteRpcClient, Proof};
 use iota_sdk_types::Digest;
-use iota_types::committee::{Committee, EpochId};
+use iota_types::committee::EpochId;
 
 const DEFAULT_GRPC_URL: &str = "http://127.0.0.1:50051";
 
@@ -75,17 +76,17 @@ enum Command {
         output: PathBuf,
     },
 
-    /// Authenticate committee transitions from a trusted committee anchor.
+    /// Authenticate committee transitions from a trusted genesis blob.
     WalkCommittee {
         /// gRPC endpoint to fetch epoch/checkpoint transition data from.
         #[arg(long, env = "IOTA_LITE_POC_GRPC_URL", default_value = DEFAULT_GRPC_URL)]
         grpc_url: String,
 
-        /// Trusted starting committee JSON file.
+        /// Genesis blob to use as the trusted epoch 0 committee anchor.
         #[arg(long)]
-        trusted_committee: PathBuf,
+        genesis_blob: PathBuf,
 
-        /// Target epoch to derive from the trusted committee.
+        /// Target epoch to derive from the genesis committee.
         #[arg(long)]
         target_epoch: EpochId,
 
@@ -115,10 +116,10 @@ async fn main() -> anyhow::Result<()> {
         } => fetch_committee(&grpc_url, epoch, &output).await,
         Command::WalkCommittee {
             grpc_url,
-            trusted_committee,
+            genesis_blob,
             target_epoch,
             output,
-        } => walk_committee(&grpc_url, &trusted_committee, target_epoch, &output).await,
+        } => walk_committee(&grpc_url, &genesis_blob, target_epoch, &output).await,
     }
 }
 
@@ -207,16 +208,24 @@ async fn fetch_committee(grpc_url: &str, epoch: EpochId, output: &Path) -> anyho
 
 async fn walk_committee(
     grpc_url: &str,
-    trusted_committee_path: &Path,
+    genesis_blob_path: &Path,
     target_epoch: EpochId,
     output: &Path,
 ) -> anyhow::Result<()> {
-    let trusted_committee: Committee = read_json(trusted_committee_path).with_context(|| {
-        format!(
-            "failed to read trusted committee from {}",
-            trusted_committee_path.display()
-        )
-    })?;
+    let trusted_committee = Genesis::load(genesis_blob_path)
+        .with_context(|| {
+            format!(
+                "failed to load genesis blob from {}",
+                genesis_blob_path.display()
+            )
+        })?
+        .committee()
+        .with_context(|| {
+            format!(
+                "failed to read genesis committee from {}",
+                genesis_blob_path.display()
+            )
+        })?;
     let trusted_epoch = trusted_committee.epoch;
     let lite_rpc_client = lite_rpc_client(grpc_url)?;
     let committee = lite_rpc_client
@@ -260,4 +269,57 @@ where
     let file = File::create(path)?;
     serde_json::to_writer_pretty(BufWriter::new(file), value)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn walk_committee_accepts_genesis_blob_anchor() {
+        let cli = Cli::try_parse_from([
+            "iota-lite-poc",
+            "walk-committee",
+            "--genesis-blob",
+            "genesis.blob",
+            "--target-epoch",
+            "1",
+            "--output",
+            "epoch-1-committee.json",
+        ])
+        .expect("parse walk-committee with genesis blob");
+
+        let Command::WalkCommittee {
+            genesis_blob,
+            target_epoch,
+            output,
+            ..
+        } = cli.command
+        else {
+            panic!("expected walk-committee command");
+        };
+
+        assert_eq!(genesis_blob, PathBuf::from("genesis.blob"));
+        assert_eq!(target_epoch, 1);
+        assert_eq!(output, PathBuf::from("epoch-1-committee.json"));
+    }
+
+    #[test]
+    fn walk_committee_rejects_trusted_committee_anchor() {
+        let result = Cli::try_parse_from([
+            "iota-lite-poc",
+            "walk-committee",
+            "--trusted-committee",
+            "epoch-0-committee.json",
+            "--target-epoch",
+            "1",
+            "--output",
+            "epoch-1-committee.json",
+        ]);
+
+        assert!(
+            result.is_err(),
+            "walk-committee should only accept a genesis blob anchor"
+        );
+    }
 }
